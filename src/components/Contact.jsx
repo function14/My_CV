@@ -7,6 +7,7 @@ const Contact = () => {
     email: '',
     message: '',
   })
+  const [status, setStatus] = useState('')
 
   const handleChange = (e) => {
     setFormData({
@@ -15,11 +16,33 @@ const Contact = () => {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
-    alert('¡Mensaje enviado! Te contactaré pronto.')
-    setFormData({ name: '', email: '', message: '' })
+    setStatus('sending')
+    
+    try {
+      const response = await fetch('https://formspree.io/f/mgolalnn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      })
+      
+      if (response.ok) {
+        setStatus('success')
+        setFormData({ name: '', email: '', message: '' })
+        setTimeout(() => setStatus(''), 3000)
+      } else {
+        setStatus('error')
+      }
+    } catch (error) {
+      setStatus('error')
+    }
   }
 
   const contactInfo = [
@@ -88,7 +111,7 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* Contact Form - Material Design */}
+          {/* Contact Form */}
           <div className="card-elevated">
             <h3 className="text-h6 text-on-surface dark:text-on-surface-dark mb-3">
               Envíame un mensaje
@@ -146,9 +169,18 @@ const Contact = () => {
               </div>
 
               {/* Submit Button */}
-              <button type="submit" className="btn-contained w-full">
-                <span className="material-icons mr-1 text-lg">send</span>
-                Enviar Mensaje
+              <button 
+                type="submit" 
+                className={`btn-contained w-full transition-all ${
+                  status === 'success' ? 'bg-green-600 hover:bg-green-700' : 
+                  status === 'error' ? 'bg-red-600 hover:bg-red-700' : ''
+                }`}
+                disabled={status === 'sending'}
+              >
+                {status === 'sending' && '⏳ Enviando...'}
+                {status === 'success' && '✓ ¡Mensaje enviado!'}
+                {status === 'error' && '✗ Error, intenta de nuevo'}
+                {status === '' && 'Enviar Mensaje'}
               </button>
             </form>
           </div>
